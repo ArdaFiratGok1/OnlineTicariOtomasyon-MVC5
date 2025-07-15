@@ -14,7 +14,7 @@ namespace OnlineTicariOtomasyonMVC.Controllers
         public ActionResult Index()
         {
             return View();
-            //To-Do kısmını atladım
+            //To-Do kısmını atladım. Opsiyonel olarak geliştirilebilir.
         }
     }
 }
