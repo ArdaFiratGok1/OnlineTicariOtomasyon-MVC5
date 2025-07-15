@@ -10,7 +10,7 @@ Bu proje, **Murat Yücedağ**'ın Udemy kursunun ilk 20 bölümüne dayanmaktad�
     Aşağıdaki komutu terminalde çalıştırarak projeyi yerel makinenize klonlayın.
 
     ```sh
-    git clone [https://github.com/ArdaFiratGok1/OnlineTicariOtomasyon-MVC5.git](https://github.com/ArdaFiratGok1/OnlineTicariOtomasyon-MVC5.git)
+    git clone https://github.com/ArdaFiratGok1/OnlineTicariOtomasyon-MVC5.git
     ```
 
 2.  **Dizine Gidin:**
