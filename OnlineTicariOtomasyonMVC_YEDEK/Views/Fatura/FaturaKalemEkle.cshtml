@@ -1,0 +1,29 @@
+﻿@model MvcOnlineTicariOtomasyon.Models.Siniflar.FaturaKalem
+@{
+    ViewBag.Title = "Yeni Kalem Ekle";
+    Layout = "~/Views/Shared/AdminLayout.cshtml";
+}
+
+<br />
+<h2>Faturaya Yeni Kalem Ekleme</h2>
+<br />
+
+@using (Html.BeginForm("FaturaKalemEkle", "Fatura", FormMethod.Post, new { @class = "form-group" }))
+{
+    // Bu yeni kalemin hangi faturaya ait olduğunu belirtmek için FaturaID'yi gizli olarak tutuyoruz.
+    @Html.HiddenFor(x => x.FaturaID, new { Value = ViewBag.FaturaId })//ViewBag'deki FaturaId'yi buradaki x.FaturaID'ye denk diyoruz.
+
+    @Html.LabelFor(x => x.Aciklama)
+    @Html.TextBoxFor(x => x.Aciklama, new { @class = "form-control" })
+    <br />
+
+    @Html.LabelFor(x => x.Miktar)
+    @Html.TextBoxFor(x => x.Miktar, new { @class = "form-control", type = "number" })
+    <br />
+
+    @Html.LabelFor(x => x.BirimFiyat)
+    @Html.TextBoxFor(x => x.BirimFiyat, new { @class = "form-control" })
+    <br />
+
+    <button class="btn btn-primary">Kalemi Kaydet</button>
+}

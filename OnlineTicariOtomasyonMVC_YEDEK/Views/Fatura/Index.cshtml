@@ -1,0 +1,78 @@
+﻿﻿@using MvcOnlineTicariOtomasyon.Models.Siniflar;
+@model List<Fatura>
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/AdminLayout.cshtml";
+}
+<br />
+<table id="tbl1" class="table table-condensed">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Tarih</th>
+
+            <th>Saat</th>
+            <th>Teslim Eden</th>
+            <th>Teslim Alan</th>
+            <th>Seri No</th>
+            <th>Sıra No</th>
+            <th>Vergi Dairesi</th>
+            <th>Toplam</th>
+
+            <th></th> <!-- Güncelleştir için boş başlık -->
+            <th></th> <!-- Detay için boş başlık -->
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var x in Model)
+        {
+            <tr>
+                <td>@x.FaturaID</td>
+                <td>@x.FaturaTarih.ToString()</td>
+                <td>@x.Saat</td>
+                <td>@x.TeslimEden</td>
+                <td>@x.TeslimAlan</td>
+                <td>@x.FaturaSeriNo</td>
+                <td>@x.FaturaSiraNo</td>
+                <td>@x.VergiDairesi</td>
+                <td>@x.Toplam</td>
+
+
+                <td>
+                    <a href="/Fatura/FaturaGetir/@x.FaturaID" class="btn btn-outline-success btn-sm">
+                        Güncelleştir
+                    </a>
+                </td>
+                <td>
+                    <a href="/Fatura/FaturaDetay/@x.FaturaID" class="btn btn-outline-info btn-sm">
+                        Detay
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<a href="/Fatura/FaturaEkle" class="btn btn-primary ">Fatura Ekle</a>
+
+<link href="~/Content/bootstrap.css" rel="stylesheet" />
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+<link href="https://cdn.datatables.net/1.10.15/css/dataTables.bootstrap.min.css" rel="stylesheet" />
+
+<link href="https://cdn.datatables.net/responsive/2.1.1/css/responsive.bootstrap.min.css" rel="stylesheet" />
+
+<script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
+
+<script src="https://cdn.datatables.net/1.10.15/js/dataTables.bootstrap4.min.js "></script>
+
+<script>
+
+    $('#tbl1').dataTable({});
+
+</script>
+
+
+
+
+

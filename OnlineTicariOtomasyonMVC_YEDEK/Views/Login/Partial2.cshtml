@@ -1,0 +1,20 @@
+﻿<div id="small-dialog1" class="mfp-hide book-form">
+    <div class="login-form login-form-left">
+        <div class="agile-row">
+            <h3>Cari Giriş Formu</h3>
+
+            <div class="clear"></div>
+            <div class="login-agileits-top">
+                @using (Html.BeginForm("Partial2", "Login", FormMethod.Post))
+                {
+                    <input type="email" class="email" name="CariMail" Placeholder="Mail Adresiniz" required="" />
+                    <input type="password" class="password" name="CariSifre" Placeholder="Şifre" required="" />
+                    <input type="submit" value="Giriş Yap">
+                }
+            </div>
+            <div class="login-agileits-top">
+                <h6><a href="#">Şifremi Unuttum</a></h6>
+            </div>
+        </div>
+    </div>
+</div>

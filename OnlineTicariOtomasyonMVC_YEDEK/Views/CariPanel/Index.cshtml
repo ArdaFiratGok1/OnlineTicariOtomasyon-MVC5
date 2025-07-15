@@ -1,0 +1,74 @@
+﻿@model MvcOnlineTicariOtomasyon.Models.Siniflar.Cariler
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/CariLayout.cshtml";
+}
+
+<h2>@HttpContext.Current.User.Identity.Name</h2> @*Bu identity'Yi SetAuthCookie derken yapmıştım.'*@
+
+
+@using (Html.BeginForm("ProfilGuncelle", "CariPanel", FormMethod.Post))
+{
+    <table class="table table-bordered">
+        <tr>
+            <td>
+                <label style="display:inline-block; width:150px;">Adınız:</label>
+                @Html.TextBoxFor(x => x.CariAd, new { @class = "form-control d-inline", style = "width:200px; display:inline-block;" })
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label style="display:inline-block; width:150px;">Soyadınız:</label>
+                @Html.TextBoxFor(x => x.CariSoyad, new { @class = "form-control d-inline", style = "width:200px; display:inline-block;" })
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label style="display:inline-block; width:150px;">Şehir:</label>
+                @Html.TextBoxFor(x => x.CariSehir, new { @class = "form-control d-inline", style = "width:200px; display:inline-block;" })
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label style="display:inline-block; width:150px;">Mail Adresiniz:</label>
+                @Html.TextBoxFor(x => x.CariMail, new { @class = "form-control d-inline", style = "width:200px; display:inline-block;" })
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label style="display:inline-block; width:150px;">Resim URL:</label>
+                @Html.TextBoxFor(x => x.CariResim, new { @class = "form-control d-inline", style = "width:200px; display:inline-block;" })
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label style="display:inline-block; width:150px;">Şifreniz:</label>
+                @Html.TextBoxFor(x => x.CariSifre, new { @class = "form-control d-inline", style = "width:200px; display:inline-block;" })
+            </td>
+        </tr>
+    </table>
+
+    <!-- 1. Güncelle butonu -->
+    <button type="button" class="btn btn-warning" onclick="handleUpdate()">Güncelle</button>
+
+    <!-- 2. Popup mesaj (başlangıçta gizli) -->
+    <div id="guncelleme_popup"
+         style="display:none; position:fixed; top:20px; right:20px; background-color:#d4edda; color:#155724; padding:15px; border-radius:5px; box-shadow:0 0 10px rgba(0,0,0,0.1); z-index:9999;">
+        ✔ Başarıyla güncellendi.
+    </div>
+
+    <script>
+        function handleUpdate() {
+            var popup = document.getElementById("guncelleme_popup");
+            popup.style.display = "block";
+
+            setTimeout(function () {
+                popup.style.display = "none";
+                document.forms[0].submit(); // Formu gönder
+            }, 1500); // Popup 1.5 saniye görünsün sonra gönder
+        }
+    </script>
+
+
+}
