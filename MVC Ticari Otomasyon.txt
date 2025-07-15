@@ -1,0 +1,915 @@
+Neler Yaptım?
+
+-Önce classları oluşturdum (classlar ve database modelleri Models klasörü içinde olur. MVC'nin M'si)
+Oluşturduğum classlar:
+Admin.cs
+Cari.cs
+Departman.cs
+Fatura.cs
+FaturaKalem.cs
+Gider.cs
+Kategori.cs
+Personel.cs
+SatisHareket.cs
+Urun.cs
+--
+Oluşturduğum ilişkiler://Ç ile başlayanlarda ilişki kurduğu sınıfı ICollection içinde kapsıyor demek mesela ICollection<Urun> Uruns gibi//
+
+ÇKategori - Urun 
+ÇFatura - FaturaKalem
+ÇSatisHareket - Urun
+ÇSatisHareket - ÇPersonel //Burada normalde o Personeli tek SatisHareket olarak yaptı ama düzeltecek galiba
+ÇSatisHareket - Cari
+
+--
+
+Sonrasında string değerlere kısıtlamalar getiriyorum fazla yer kaplamasın diye. Örnek:
+
+[Column(TypeName = "Varchar")]
+[StringLength(250)]
+public string UrunGorsel { get; set; }
+
+[Column(TypeName = "Varchar")]//Bu şekilde UrunAd'ı kısıtlamış oluyoruz, artık sqldeki türü varchar olacak ve max 30luk bir yeri dolduracak
+[StringLength(30)]//kısıtlama olmazsa string çok yer kaplıyor, diğer int gibi türler yine az yer kaplıyor o yüzden onlara gerek yok
+public string UrunAd { get; set; }
+
+[Column(TypeName = "Varchar")]
+[StringLength(30)]//Bu da Marka için
+public string Marka { get; set; }
+
+DİKKAT!
+        [Column(TypeName = "Char")]
+        [StringLength(1)]
+        public string FaturaSeriNo { get; set; }
+
+böyle bi şekilde de kullandı string olarak tanımlamasına rağmen sql tablosunda char olsun dedi yani
+
+----
+
+Daha sonra EntityFramework paketini kurdum. Burada en başta yapılandırma gereklidir diye bi uyarı çıktı. Yapılandır'a bastıktan sonra çıkan sekmede Ekle'ye bastım oradan da Paket Deseni kısmında * yazdım. ve nuget.org'u seçtim oradan tamam deyip çıktım işte problem ortadan kalktı.
+
+----
+
+Sonrasında yine Sınıflar klasörünün içine Context sınıfını oluşturdum. Burada Context : DbContext gibi bi bağlantı kurdum DbSet diye değişken tipi kullanmam gerekecek diye. 
+
+public DbSet<Admin> Admins { get; set; }//Burada Admins SQL tablomda gözükeceği isim, sonuna s takısı geliyormuş hep.
+
+public DbSet<Cari> Caris { get; set; }
+
+.
+.
+.
+
+----
+Şimdi bizim Database uygulamasıyla bi bağlantımız olması lazım şimdi biz CodeFirst mantığıyla yazdığımız için elimizde daha bi database yokken kodu yazıyoruz ondan ötürü elimizde hazır bi connection string yok. Ondan ötürü web.config dosyasına girip en altta </configuration>'dan önce (bu projede </entityFramework>'dan sonra oluyor yani aralarına) kendi connection stringimi ekliyorum:
+
+<connectionStrings>
+	<add name="Context" connectionString="data source=ARDA\SQLEXPRESS;initial catalog=TicariOtomasyonDb;integrated security=True;" providerName="System.Data.SqlClient" />
+</connectionStrings>
+
+!!Burada initial catalog= kısmına yazdığım isim benim database'in ismini girdiğim yer. Daha böyle bi database yok ama oluşunca ismi TicariOtomasyınDb olacak.
+
+----
+
+Şimdi connection string ile tanımladığım database'i oluşturmak için migrations işlemlerine başlıyorum. Görünüm>Diğer Pencereler>Paket Yöneticisi Konsolu'nu açıp enable-migrations yazdım. Yazdıktan sonra direkt Configuration.cs diye bi dosya açıyor orada AutomaticMigrationsEnabled = false diyor ama kodda değişiklik yaptığımda database tarafında da uygulayabilmem için onu true olarak değiştiriyorum. Daha sonra update-database diyorum ve database'imi MSSQL tarafında oluşturmuş oldum.
+
+---
+DİKKAT KRİTİK DEĞİŞİKLİK
+
+Eski ilişkilerde yanlış yapılmış 
+
+Oluşturduğum ilişkiler://Ç ile başlayanlarda ilişki kurduğu sınıfı ICollection içinde kapsıyor demek mesela Kategori içinde ICollection<Urun> Uruns gibi//
+
+Eski Hali:
+ÇKategori - Urun 
+ÇFatura - FaturaKalem
+ÇSatisHareket - Urun
+ÇSatisHareket - ÇPersonel 
+ÇSatisHareket - Cari
+
+Yeni Hali:
+ÇKategori - Urun 
+ÇFatura - FaturaKalem
+SatisHareket - ÇUrun
+SatisHareket - ÇPersonel 
+SatisHareket - ÇCari
+
+
+Bu kritikliği yapmak için yine update-database diyorum, burada bi uyarı verebilir hani veri kaybı olabilir emin misin tarzı bu durumda update-database -Force yazmam gerekiyor hani ok veri kaybı olabilir sen değiştir yine de der gibi.
+
+Daha sonra MSSQL'de örnek veriler giriyorum çalışıyor mu kontrol etmek için. 
+
+Çalışıyor!!!1!!
+
+----
+
+Daha sonra Controller ve View kısmına geçiyoruz.
+
+Önce Controllers klasörünün içine KategoriController'i ekledim. 
+
+!!! Layout yapısı bi websitesinde farklı sectionlara girilse bile değişmeyen hep görünür sabit kalan yapısıdır. Arama çubuğu ya da menü bölgesi vb gibi
+
+Bende kendi panelim için bi layout oluşturacağım. Layout'lar View>Shared klasörünün içinde yar alıyor unutma!
+
+Shared klasörünün içinde Görünüm Ekle diyorum orada çıkan sekmede altta Bir düzen sayfası kullan seçeneğini boş bırak çünkü oluşacak layout kendi başına bi düzen sayfası olacak. İsmini _AdminLayout yaptım. ( _ ile başlaması zorunlu değil)
+
+Oluşturunca _AdminLayout.cshtml şuna benziyor:
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>_AdminLayout</title>
+</head>
+<body>
+    <div> 
+    </div>
+</body>
+</html>
+
+Burada layout yapısının içine gelecek kısmı belirtmek için RenderBody() fonksiyonu çağrılır. html yapısında html komutu olmayan komut bloklarının başına @ eklenir (mesela @if falan ya da bu durumdaki gibi @RenderBody(). Bir de test amaçlı 
+<h3>Burası Layout Kısmı!!<\h3> ekledim. Yeni hali:
+
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>_AdminLayout</title>
+</head>
+<body>
+    <h3>Burası Layout Kısmı!!</h3>
+    <div> 
+        @RenderBody()
+    </div>
+</body>
+</html>
+
+
+Daha sonrasında KategoriController kısmına gidiyorum ve oradaki Index() fonksiyonun üzerine sağ tıklayıp görünüm ekle diyorum. Buradaki görünüm bi düzen sayfası kullanacak o da daha demin hazırladığım _AdminLayout.cshtml olacak.
+
+Oluşan yeni görünüm (Index.cshtml yani Index fonksiyonu üzerine tıkladığım için)
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2>Burası Kategori context kısmı </h2>//buraya ben yazdım test için
+
+üzerine tıklayıp tarayıcıda açabiliyorum.
+
+----
+
+Burada layout ve context kısımları için hazır temalar var onları kullanıyorum (linki https://yadi.sk/d/Wa19RWcdZHJpdQ)
+
+Oradaki index.html'i direkt kopyalayıp kendi _AdminLayout.cshtml'ye yapıştırıyorum.
+
+!Dikkat: 
+_AdminLayout'daki şu kısma dokunmadan !DOCTYPE html kısmından itibaren yapışıtıyorum zaten aldığım temadaki html koduda ordan başlıyor:
+
+@{
+    Layout = null;
+}
+
+---
+
+Temadaki index.html kodunda doğru çalışabilmesi için değişiklikler yaptım bunlar:
+<main> 
+..
+<\main> kısmını (Hazır context yani ama ben kendi contextlerimi kullanacağım) tamamen silip yerine @RenderBody'yi yazdım. (Bu sayede statik bi context değil hangi contexti istersem RenderBody'yi çağırıp o contexti gösterebileceğim)
+
+Css link yolunu düzenlemem gerekti, html kodu css dosyasına da erişebilsin diye
+Eski Hali:
+<link href="css/styles.css" rel="stylesheet" />
+
+Yeni Hali:
+<link href="~/Ucretsiz_Tema/dist/css/styles.css" rel="stylesheet" /> //Klasorun ismini ben Ucretsiz_Tema yaptım
+
+En aşağıdaki scriptlerin yollarını düzenlemem gerekti yine, sırasıyla eski ve yeni halleri
+
+<script src="js/scripts.js"></script>
+<script src="~/Ucretsiz_Tema/dist/js/scripts.js"></script>
+
+<script src="assets/demo/chart-area-demo.js"></script>
+<script src="~/Ucretsiz_Tema/dist/assets/demo/chart-area-demo.js"></script>
+
+<script src="assets/demo/chart-bar-demo.js"></script>
+<script src="~/Ucretsiz_Tema/dist/assets/demo/chart-bar-demo.js"></script>
+
+<script src="assets/demo/datatables-demo.js"></script>
+<script src="~/Ucretsiz_Tema/dist/assets/demo/datatables-demo.js"></script>
+
+----
+
+Burada bi noktada _AdminLayout kodlarını değiştiriyoruz ama çok önemli değil sadece tasarımla alakalı bir bölüm. Ucretsiz_Tema'daki başka bi html dosyasını temel olarak alıyoruz ve onu bizim _AdminLayout'a yapıştırıyoruz ve yine linklerin yollarını ~/Ucretsiz-Tema/dist/… diye ayarlıyoruz.
+
+Kategori context kısmı için tablo yaptım. KategoriController'deki Index'e sağ tıklayıp Index.cshtml'e gidiyorum ve kod:
+<table class="table table-bordered">
+    <tr>
+        <th>
+            ID
+        </th>
+        <th>
+            Kategori Adı
+        </th>
+    </tr>
+    <tr>
+        <th>
+            1
+        </th>
+        <th>
+            Meyve
+        </th>
+    </tr>
+    <tr>
+        <th>
+            2
+        </th>
+        <th>
+            Beyaz Eşya
+        </th>
+    </tr>
+</table> 
+
+table, tabloyu oluşturuyor. tr satır, th ise sütun.
+
+----
+
+Layout'daki İngilizce kelimeleri Türkçeleştiriyorum _AdminLayout'daki o kelimeleri değiştiriyoruz burada, bir de yanlarındaki küçük semboller için internetten o sembolün kodunu alıyoruz.
+
+.
+.
+.
+<div class="sb-sidenav-menu-heading">Core</div>
+<a class="nav-link" href="index.html">
+    <div class="sb-nav-link-icon"><i class="fas fa-align-left"></i></div> //fa-align-left sembolün kodu//
+    Kategoriler
+</a>
+.
+.
+
+----
+Daha sonra kategori listelemeye geçtim. 
+
+Listeleme ekranda gözükeceği için Index.cshtml'de üst tarafa @ ile Sınıflar klasörünü ve listeleme için bi model kullanmam gerektiği için @ ile Kategori listesini koda ekliyorum:
+
+@using MvcOnlineTicariOtomasyon.Models.Siniflar
+@model List<MvcOnlineTicariOtomasyon.Models.Kategori> 
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+Şimdiki tablo kullanımı dinamik olacağı için Index.cshtml'De eski tablo kodları yerine şöyle bişi yapıyorum.
+
+<table class="table table-bordered" style="margin-top:20px">
+    <tr>
+        
+        <th>ID</th>
+        <th>Kategori ID</th>
+        <th>Sil</th>
+        <th>Güncelle</th>
+    </tr>
+    @foreach(var k in Model)
+    {
+
+        <tr>
+            <td>
+                @k.KategoriId
+            </td>
+
+            <td>
+                @k.KategoriAd
+            </td>
+
+            <td><a href="#" class="btn btn-danger">Sil</a></td>
+            <td><a href="#" class="btn btn-success">Güncelle</a></td>
+        </tr>
+
+    }
+</table>
+
+<a href="/Kategori/KategoriEkle" class="btn btn-primary">Kategori Ekle</a>
+
+Burada bi btn vardı onu silip href butona basınca KategoriEkle sekmesine gitmek için koydum.
+
+----
+
+Kategori Eklemek için KategoriController'a fonksiyonunu yazmam lazım. İlk fonksiyon KategoriEkle fonksiyonunun gönderilmesi için yazılır yani görünmesini sağlıyor, ikincisi ise o formun doğru çalışmasını sağlar, yani kategoriyi eklememize yarar:
+
+namespace MvcOnlineTicariOtomasyon.Controllers
+{
+    public class KategoriController : Controller
+    {
+        
+        Context context = new Context();
+        public ActionResult Index()
+        {
+            var degerler = context.Kategoris.ToList();
+            return View(degerler);
+            
+        }
+
+        [HttpGet]
+        public ActionResult KategoriEkle()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public ActionResult KategoriEkle(Kategori k)
+        {
+            context.Kategoris.Add(k);
+            context.SaveChanges();
+            return RedirectToAction("Index");
+
+        }
+    }
+}
+
+----
+
+Kategori Ekleme sayfasını düzenledim:
+@model MvcOnlineTicariOtomasyon.Models.Kategori
+
+@{
+    ViewBag.Title = "KategoriEkle";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<br />
+<h2>Yeni Kategori Ekleme Sayfası</h2>
+<br />
+
+<form class="form-group" method="post">
+    @Html.LabelFor(x=>x.KategoriAd)
+    @Html.TextBoxFor(x => x.KategoriAd, new { @class="form-control"})
+    <br />
+    <button class="btn btn-info">Kaydet</button>
+
+</form>
+
+Burada html helpers denen araçları kullandım nası yani @Html.TextBoxFor yazı yazmam için bi alan açıyor mesela.
+!! Buradaki butona basınca default olarak form, içine yazılan işlemi gerçekleştirir. Yani o butona kaydedeceğini kim söyledi dersen buton <form></form>'n içinde olduğu için bu default bi özellik olarak ona ekleniyor. Başka bi buton eklersen o da aynı şeyi yapar.
+
+----
+
+Kategori Silme:
+
+public ActionResult KategoriSil(int id)
+{
+    var kategori = context.Kategoris.Find(id);
+    context.Kategoris.Remove(kategori);
+    context.SaveChanges();
+    return RedirectToAction("Index");
+
+}
+
+Index.cshtml'deki sil href'ine de yol ekliyorum:
+
+<td><a href="/Kategori/KategoriSil/@k.KategoriId" class="btn btn-danger">Sil</a></td> 
+
+Burada @k.KategoriId kategorileri neye göre sildiğimi belirtmem gerektiği için kullanıyorum(Silme fonksiyonum int id istiyor ya onun için).
+!! Silinecek kategoriye bağlı hiçbir ürün olmaması gerekiyor yoksa hata verir.
+
+----
+
+Kategori Güncelleme:
+
+public ActionResult KategoriGetir(int id) 
+{
+    var kategori = context.Kategoris.Find(id);
+    return View("KategoriGetir",kategori);
+}
+
+public ActionResult KategoriGuncelle(Kategori k)
+{
+    var kategori = context.Kategoris.Find(k.KategoriId);
+    kategori.KategoriAd=k.KategoriAd;
+    context.SaveChanges();
+    return RedirectToAction("Index");
+
+}
+
+KategoriGetir view'i bana id'ye kategori bilgilerini gösterir. Mesela Tekstil kategorisi satırındaki güncelleme butnuna tıklıyorum ve çıkan güncelleme sayfasındaki textboxda Tekstil yazıyor, onu silip yerine yeni kategori ismini yazıyorum ve bu şekilde güncelliyor.
+
+KategoriGetir.cshtml :
+
+@model MvcOnlineTicariOtomasyon.Models.Kategori
+
+@{
+    ViewBag.Title = "KategoriGetir";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<br />
+<h2>Kategori Güncelleme Sayfası</h2>
+<br />
+
+@using (Html.BeginForm("KategoriGuncelle","Kategori", FormMethod.Post))
+ {
+    <div class="form-group">
+
+        @Html.LabelFor(x=>x.KategoriAd)
+        @Html.TextBoxFor(x=>x.KategoriAd, new {@class = "form-control" })
+        @Html.HiddenFor(x=>x.KategoriId)
+    </div>
+    <button class="btn btn-warning">Güncelle</button>
+
+                
+ }
+
+Buradaki FormMethod.Post, PUT gibi çalışıyor yani güncelleme özelliği gösteriyor.
+
+----
+
+Bu işlemleri Urun için de yapıyorum.
+
+!! Urun burada Kategoriyle ilişkili ve ben her ürünün bağlı olduğu Kategorinin adını göstermek istiyorum bunun için Urun sınıfının içine Kategori sınıfı için virtual olarak belirtmem lazım yani: 
+
+        public virtual Kategori Kategori { get; set; }
+
+olacak.
+
+ve Index.cshtml'de:
+
+<td>
+    @u.Kategori.KategoriAd
+</td>
+
+olacak.
+
+----
+
+Urun ekleme işleminde 
+
+@Html.LabelFor(x => x.Kategori)
+@Html.TextBoxFor(x => x.Kategori.KategoriId, new { @class = "form-control" })
+
+kısmı sıkıntılı çalışıyor o yüzden Urun class'ında kendim bir int KategoriId tanımlıyorum, bu değer de UrunEkle fonksiyonuna önceki x.Kategori.KategoriId gibi int gönderecek o yüzden bi problem olmuyor.
+
+----
+
+Sadece Durumu true olan ürünleri listelemek için:
+
+public ActionResult Index()
+{
+    var degerler = context.Uruns.Where(x=>x.Durum==true).ToList();
+    return View(degerler);
+}
+
+----
+
+Urunler için Dropdown Kategori listesi:
+
+Controller sayfasında:
+
+[HttpGet]
+public ActionResult UrunEkle()
+{
+    List<SelectListItem> degerler = (from x in context.Kategoris.ToList() select new SelectListItem
+    {
+        Text = x.KategoriAd,
+        Value = x.KategoriId.ToString()
+    }).ToList();
+    ViewBag.dgr1 = degerler;
+    return View();
+}
+
+UrunEkle.cshtml'de :
+
+ @Html.LabelFor(x => x.Kategori.KategoriId)
+ @Html.DropDownListFor(x => x.KategoriId,(List<SelectListItem>)ViewBag.dgr1,"Kategori Seçiniz", new { @class = "form-control" })
+
+-----
+
+Sınıflarda yaptığımız sınırlamalara uyulmazsa uygulama error vermesin, geçerli sayfa gösterilmeye devam etsin diye hangi fonksiyonda bu sistemi kurmak istiyorsak onun içine:
+
+public ActionResult CariGuncelle(Cari c)
+{
+    if(!ModelState.IsValid)
+    {
+        return View("CariGetir");//Error sayfasına götürmek yerine, geçerli sayfayı görüntülemeye devam ediyor
+    }
+
+    var cari = context.Caris.Find(c.CariId);
+    cari.CariAd = c.CariAd;
+    cari.CariSoyad = c.CariSoyad;
+    cari.CariSehir = c.CariSehir;
+    cari.CariMail = c.CariMail;
+
+    context.SaveChanges();
+    return RedirectToAction("Index");
+
+}
+
+
+Validation Kontrolleri eklemek için mesela Cari.cs:
+
+[Column(TypeName = "Varchar")]
+[StringLength(30, ErrorMessage = "En fazla 30 karakter uzunluğunda metin girebilirsiniz.")]
+[Required(ErrorMessage = "Bu alan boş geçilemez")]
+public string CariAd { get; set; }
+
+[Column(TypeName = "Varchar")]
+[StringLength(30, ErrorMessage = "En fazla 30 karakter uzunluğunda metin girebilirsiniz.")]
+public string CariSoyad { get; set; }
+
+Burada mesajları hazırlıyoruz.
+
+
+
+CariGetir.cshtml'de ise bu mesajları alıp yansıtıyoruz:
+
+@Html.HiddenFor(x => x.CariId)
+
+@Html.LabelFor(x => x.CariAd)
+@Html.TextBoxFor(x => x.CariAd, new { @class = "form-control" })
+@Html.ValidationMessageFor(x => x.CariAd, "", new { @style = "color:gray" })
+<br />
+@Html.LabelFor(x => x.CariSoyad)
+@Html.TextBoxFor(x => x.CariSoyad, new { @class = "form-control" })
+@Html.ValidationMessageFor(x => x.CariSoyad, "", new { @style = "color:gray" })
+
+Burada ValidationMessageFor'da "" ile yazdığım yere "Bos Geçilemez" gibi bi uyarı da yazabilirim, eğer boş bırakırsam Modelde belirttiğim uyarıyı yansıtır. (Modelde birden fazla durum için uyarı mesajı veriyor ondan dolayı boş bırakıyorum)
+
+Her uyarı için farklı renkte uyarı vermekte mümkünmüş ama bi tık karışık işin düşerse yaparsın.
+
+----
+
+Şimdide Trigger'ları tanımlayacağım. Trigger şu işe yarıyor mesela ben satış yapicam ve 10 tane o üründen sattım doğal olarak o ürünün stoğu 10 azalacak. Triggerlar database sunucunda yani MSSQL'de tanımlayacağım. Yeni bi query açıp:
+
+Create Trigger SatisStokAzalt
+On SatisHarekets
+After Insert
+as
+Declare @UrunId int
+Declare @Adet int
+Select @UrunId= UrunID, @Adet = Adet from inserted
+Update Uruns set stok=stok-@Adet where UrunID=@UrunId
+
+Açıklaması: 
+
+Create Trigger SatisStokAzalt
+On SatisHarekets
+After Insert
+as
+
+SatisHarekets üzerinde SatisStokAzalt adında bi Trigger oluştur ve Tabloya bir ekleme yapıldığında çalıştır.
+
+
+Declare @UrunId int
+Declare @Adet int
+Select @UrunId= UrunID, @Adet = Adet from inserted
+
+Declare komutu ile 2 tane değişken oluşturuluyor ve bunlar hangi tabloya ekleme yapıldıysa (from inserted), bu durumda SatisHarekets'deki UrunID ve Adet değişkenlerine eşitleniyor.
+
+
+Update Uruns set stok=stok-@Adet where UrunID=@UrunId
+
+Uruns tablosuna bakılıyor ve önceden tanımlayıp değer atadığımız UrunID'ye denk gelen ürünün stoğundan adet kadar çıkartarak güncelleniyor.
+
+----
+
+DataTable kullanımı için jquery.datatables adlı paketi yüklememiz lazım. Yüklendikten sonra Content sınıfının içinde DataTables adlı bi klasör ve içinde hazır görsel kullanımlar olacak. DataTable scriptlerinin doğru bir şekilde çalışması için
+.cshtml dosyasında 
+
+<thead> </thead>
+
+<tbody></tbody>
+
+gibi ayırıcı bloklar kullanılmalı.
+
+Scriptler genelde dosyanın en altına konuluyormuş. Bu projede Datatable ve görünüm için scriptler:
+
+<link href="~/Content/bootstrap.css" rel="stylesheet" />
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+<link href="https://cdn.datatables.net/1.10.15/css/dataTables.bootstrap.min.css" rel="stylesheet" />
+
+<link href="https://cdn.datatables.net/responsive/2.1.1/css/responsive.bootstrap.min.css" rel="stylesheet" />
+
+<script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
+
+<script src="https://cdn.datatables.net/1.10.15/js/dataTables.bootstrap4.min.js "></script>
+
+<script>
+
+$('#tbl1').dataTable({});
+
+</script>
+
+Bu kısımda üstte tabloya <table id="tbl1" ...> diye bi id tanımlıyorum. $('#tbl1').dataTable({}); kısmının içine bu id'yi belirtiyorum bu dataTable scriptinin hangi tablo üzerinde çalışacağını gösterir. Ben bu cshtml'de bir tane tablo kullandım ama mesela 5 tane tablom olacak orada hangisinde datatable istediğime göre bu id'leri kullanacağım
+
+----
+
+PDF ~ Excel kısmı için UrunController'da UrunListele adında bir fonksiyon ve AdminLayout kullanmadan bir View (.cshtml) oluşturuyorum. 
+
+----
+
+İstatistikler için Web2 klasöründeki css,js dosyalarını kullanıyorum. İlk indirdiğin rar dosyasında var. Birde IstatiktikController oluşturdum ki ViewBag'ları oluşturup View'da gösterebileyim. Örnek:
+
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+using MvcOnlineTicariOtomasyon.Models.Siniflar;
+
+namespace OnlineTicariOtomasyonMVC.Controllers
+{
+    public class IstatistikController : Controller
+    {
+        // GET: Istatistiklt
+        Context context = new Context();
+        public ActionResult Index()
+        {
+            var deger1 = context.Carilers.Count().ToString();
+            var deger2 = context.Uruns.Count().ToString();
+            var deger3 = context.Personels.Count().ToString();
+            var deger4 = context.Kategoris.Count().ToString();
+
+            ViewBag.d1 = deger1;
+            ViewBag.d2 = deger2;
+            ViewBag.d3 = deger3;
+            ViewBag.d4 = deger4;
+
+.
+.
+.
+.
+
+var deger8 = (from x in context.Uruns orderby x.SatisFiyat ascending select x.UrunAd).FirstOrDefault();//Direkt Query de yazabiliyorsun böyle
+
+
+----
+
+var deger10 = context.Uruns.GroupBy(x=>x.Marka).OrderByDescending(z=>z.Count()).Select(y=>y.Key).FirstOrDefault();
+
+//Gruplar sayı olarak tutulur örneğin 2 tane arçelik 3 tane samsung marka ürünüm varsa grupta 2 ve 3 numaraları yer alır. Burada Key ifadesi o numaranın denk geldiği Marka'dır. Bizde Marka'yı öğrenmek istiyoruz ondan Select kullandım.
+
+----
+
+Detay.cs:
+
+    public class Detay
+    {
+        [Key]
+        public int DetayID { get; set; }
+
+        [Column(TypeName ="varchar")]
+        [StringLength(50)]
+        public string urunad {  get; set; }
+
+        [Column(TypeName = "varchar")]
+        public string urunbilgi { get; set; }
+    }
+
+
+Class1.cs:
+
+    public class Class1
+    {
+        public IEnumerable<Urun> Deger1 { get; set; }
+        public IEnumerable<Detay> Deger2 { get; set; }
+
+    }
+
+
+
+UrunDetayController:
+
+namespace MvcOnlineTicariOtomasyon.Models.Siniflar
+{
+    public class UrunDetayController : Controller
+    {
+        // GET: UrunDetay
+
+        Context context = new Context();
+        public ActionResult Index(int id)
+        {
+            Class1 cs = new Class1();
+            cs.Deger1 = context.Uruns.Where(x=>x.UrunID==id).ToList();
+            cs.Deger2 = context.Detays.Where(x => x.DetayID == id).ToList();//Her ürüne karşlık gelen UrunID ve DetayID aynı olacak şekilde ayarlanmalı
+
+            return View(cs);
+        }
+    }
+}
+
+foreach (var x in Model.Deger1)
+                {
+
+                    <div class="card-body">
+
+                        <div class="row">
+
+                            <div class="col-12 col-sm-6">
+
+                                <h3 class="d-inline-block d-sm-none">LOWA Men’s Renegade GTX Mid Hiking Boots Review</h3>
+
+                                <div class="col-12">
+
+                                    <img src="@x.UrunGorsel" class="product-image" alt="Product Image">
+
+                                </div>
+.
+.
+.
+.
+
+----
+
+Partial view bi html bloğu gibi düşünebilirsin içine yazıyorsun o bi kutu gibi davranıyor ve sen o kutuyu html kodunun istediğin bi yerine koyabiliyorsun.
+
+Hangi controller içine koyacaksan orada:
+
+public PartialViewResult PartialView1()
+{
+    var departmanlar = context.Departmans.GroupBy(x=>x.DepartmanAd).OrderByDescending(x=>x.Count()).Take(4).Select(x=> new DepartmanIstatistik {departman_ad = x.Key,adet = x.Count() }).ToList();
+    ViewBag.departman_sayi= departmanlar.Count();
+    return PartialView(departmanlar);
+}
+
+
+PartialView1 adında bi görünüm ekliyorsun (.cshtml)
+
+içine kodu yazıyorsun:
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">####</h3>
+    </div>
+    <!-- /.card-header -->
+    <div class="card-body p-0">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th style="width: 10px">#</th>
+                    <th>Task</th>
+                    <th>Progress</th>
+                    <th style="width: 40px">Label</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int i = 0;
+                    var toplam = ViewBag.departman_sayi;
+                    string[] renkler = new[] { "danger", "warning", "info", "success", "primary" };
+                }
+.
+.
+.
+.
+.
+.
+.
+
+PartialView'i içine koyacağın html klasöründe:
+
+
+.
+.
+.           
+</div>
+         <!-- /.card -->
+           @Html.Action("PartialView1","Istatistik")
+         <!-- /.card -->
+          
+</div>
+.
+.
+.
+
+----
+
+LabelFor(x=>x.PersonelAd) deyince sql database'deki ismini yani direkt PersonelAd olarak alıyor. Daha güzel şekilde gözükmesi için Personel.cs'de Display(Name= "") kullanılabilinir:
+
+
+        [Display(Name = "Personel Adı")]
+        [Column(TypeName = "Varchar")]
+        [StringLength(30)]
+        public string PersonelAd { get; set; }
+
+-----
+
+Authentication (Yetkilendirme)
+
+Yetkilendirme işlemi için önce Web.config dosyasının içinde <system.web> . . . </system.web>'in içinde herhangi bi yere şunu yazıyorum:
+
+  <system.web>
+    	.
+    	.
+	.
+	  <authentication mode ="Forms">
+		  <forms loginUrl="/Login/Index/"></forms>
+	  </authentication>
+	.
+	.
+	.
+
+  </system.web>
+
+Bu işlem Controller'da [Authorize] ile yetkilendirme şartı koyduğum yerlere, örneğin /CariPanel/Index gibi bi sayfaya login yapmadan girememesini sağlıyor. Eğer girmeye çalışırsa onu /Login/Index/ sayfasına yönlendiriyor.
+
+Controller'da Authorize şöyle oluyor:
+
+    public class CariPanelController : Controller
+    {
+        // GET: CariPanel
+        [Authorize]
+        public ActionResult Index()
+        {
+            return View();
+        }
+    }
+
+Yani şimdi Index View()'ine gidebilmek için önce Authorize olması lazım.
+
+
+Daha sonrasında Login controllerinin index sayfasında şöyle bi form açıyorum:
+
+                    <div class="login-agileits-top">
+                        @using (Html.BeginForm("Login2", "Login", FormMethod.Post))
+                        {
+                            <input type="email" class="email" name="CariMail" Placeholder="Mail Adresiniz" required="" />
+                            <input type="password" class="password" name="CariSifre" Placeholder="Şifre" required="" />
+                            <input type="submit" value="Giriş Yap">
+                        }
+                    </div>
+
+Controller kısmı da şöyle :
+
+        public ActionResult Login2(Cariler c)//Cari Giriş
+        {
+            var bilgiler = context.Carilers.FirstOrDefault(x=>x.CariMail == c.CariMail && x.CariSifre==c.CariSifre);
+
+            if (bilgiler != null)
+            {
+                FormsAuthentication.SetAuthCookie(bilgiler.CariMail,false);
+                Session[c.CariMail] = bilgiler.CariMail.ToString();
+                return RedirectToAction("Index","CariPanel");
+            }
+            else
+            {
+                return RedirectToAction("Index", "Login");
+            }
+                
+        }
+
+
+buradaki 
+
+ var bilgiler = context.Carilers.FirstOrDefault(x=>x.CariMail == c.CariMail && x.CariSifre==c.CariSifre);
+
+kısmında mail ve şifresi uyuşan ilk kişiyi getir diyorum eğer yoksa null döner. Null dönerse Login sayfasına geri gönderiyorum. Ve eğer böyle bir kişi varsa onu CariPanel' gönderiyorum yani içeri alıyorum. Ama bu içeri aldığım kişinin kim olduğunu tutmam lazım yoksa giren herhangi iki kişi arasında fark kalmaz bunun içinde Session ile bu adamın mailini tutuyorum yani ona özel bilgileri bu mail üzerinden bulacağım. Burada ID kullanmak da mantıksız değil hiç hatta galiba daha mantıklı ama bakalım.
+
+O session'u da CariPanelController'da :
+
+        Context context=new Context();
+
+        [Authorize]
+
+        public ActionResult Index()
+        {
+            var mail = (string)Session["CariMail"];
+            var cari_bilgiler = context.Carilers.FirstOrDefault(x=>x.CariMail==mail);
+            return View();
+        }
+
+olarak kullanabiliyorum. Ki zaten Index'in çalışaması için önce Authorize olması gerekiyor yani öyle bi Session'un tanımlandığını biliyorum.
+
+----
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
