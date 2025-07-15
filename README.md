@@ -2,30 +2,14 @@
 
 Bu proje, **Murat Yücedağ**'ın Udemy kursunun ilk 20 bölümüne dayanmaktadır. Projede çeşitli özelleştirmeler yapılmıştır.
 
-## 🛠 Kullanılan Teknolojiler
-- ASP.NET MVC 5  
-- Entity Framework  
-- MSSQL  
-- Bootstrap  
-- LINQ  
+# ⚙️ Kurulum
 
-## 🔧 Özellikler
-- Cari ve ürün yönetimi  
-- Kategori ekleme/silme  
-- Satış işlemleri  
-- Giriş/çıkış kontrolü  
+Projeyi clone'layın veya indirin.
 
-## 🗂 Yapı
-- `Controllers/`  
-- `Models/`  
-- `Views/`  
-- `NOTLAR.txt` → Geliştirme sırasında alınan notlar
+Visual Studio 2019+ ile açın.
 
-## 🚀 Başlamak İçin
-1. Projeyi Visual Studio ile açın  
-2. NuGet paketlerini geri yükleyin  
-3. `Web.config` içinde veritabanı bağlantısını kontrol edin  
-4. `Ctrl + F5` ile çalıştırın
+Package Manager Console'da Update-Package -reinstall komutunu çalıştırın.
 
-## 🧾 Lisans
-Sadece kişisel ve eğitim amaçlı kullanım içindir.
+Web.config dosyasındaki connectionString'i kendi SQL sunucunuza göre düzenleyin.
+
+Projeyi başlatın (Ctrl+F5). Veritabanı Code First ile otomatik olarak oluşturulacaktır.
